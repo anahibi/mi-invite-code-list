@@ -32,15 +32,15 @@
 
         const ul = document.getElementById('code-list');
         codes.forEach(code => {
-          const li = document.createElement('li');
+        const li = document.createElement('li');
 
-          //コード表示
+        //コード表示
         const span = document.createElement('span');
         span.textContent = code;
         li.appendChild(span);
 
         // コピー用ボタン
-                const btn = document.createElement('button');
+        const btn = document.createElement('button');
         btn.textContent = 'コピー';
         btn.style.marginLeft = '10px';
         btn.addEventListener('click', async () => {

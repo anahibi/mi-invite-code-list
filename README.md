@@ -3,6 +3,8 @@
 Misskeyの招待コード一覧を表示するWebページです。  
 Cloudflare Workersで動作します。
 
+![](./image.png)
+
 開発環境をインストールします。
 
 ```
