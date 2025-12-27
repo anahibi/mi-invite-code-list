@@ -1,26 +1,41 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `npm run dev` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npm run deploy` to publish your worker
- *
- * Bind resources to your worker in `wrangler.jsonc`. After adding bindings, a type definition for the
- * `Env` object can be regenerated with `npm run cf-typegen`.
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
+export interface Env {
+  MISSKEY_HOST: string;
+  MISSKEY_TOKEN: string;
+}
 
 export default {
-	async fetch(request, env, ctx): Promise<Response> {
-		const url = new URL(request.url);
-		switch (url.pathname) {
-			case '/message':
-				return new Response('Hello, World!');
-			case '/random':
-				return new Response(crypto.randomUUID());
-			default:
-				return new Response('Not Found', { status: 404 });
-		}
-	},
-} satisfies ExportedHandler<Env>;
+  async fetch(request: Request, env: Env) {
+    const url = new URL(request.url);
+    if (url.pathname === '/api/codes') {
+      return handleCodesApi(env);
+    }
+
+    // 静的ファイルはそのまま返す
+    return fetch(request);
+  }
+};
+
+async function handleCodesApi(env: Env): Promise<Response> {
+  const apiUrl = `https://${env.MISSKEY_HOST}/api/admin/invite/list`;
+  const res = await fetch(apiUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${env.MISSKEY_TOKEN}`
+    },
+    body: JSON.stringify({ limit: 5, type: 'unused', sort: '-createdAt' })
+  });
+
+  if (!res.ok) {
+    return new Response('API Error', { status: 500 });
+  }
+
+  const data = await res.json();
+  const codes = Array.isArray(data)
+    ? data.filter(item => item.createdBy.username === 'admin').map(item => item.code)
+    : [];
+
+  return new Response(JSON.stringify(codes), {
+    headers: { 'Content-Type': 'application/json' }
+  });
+}

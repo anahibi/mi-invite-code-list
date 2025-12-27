@@ -1,32 +1,70 @@
-<!doctype html>
-<html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Hello, World!</title>
-	</head>
-	<body>
-		<h1 id="heading"></h1>
-		<p>This page comes from a static asset stored at `public/index.html` as configured in `wrangler.jsonc`.</p>
-		<button id="button" type="button">Fetch a random UUID</button>
-		<output id="random" for="button"></output>
-		<script>
-			fetch('/message')
-				.then((resp) => resp.text())
-				.then((text) => {
-					const h1 = document.getElementById('heading');
-					h1.textContent = text;
-				});
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>招待コード</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    ul { list-style-type: none; padding: 0; }
+    li { background: #f4f4f4; margin: 5px 0; padding: 10px; border-radius: 5px; }
+    a:link { color: #3399cc; }
+    a:visited { color: #cc6633; }
+    @media (prefers-color-scheme: dark) {
+      body { background-color: #2E2F31; color: #f5f5f5; }
+      li { background: #48494d; }
+    }
+  </style>
+</head>
+<body>
+  <h1>招待コード一覧</h1>
+  <p>このページに招待コードが表示されない場合は売り切れです。入荷までお待ちください。</p>
 
-			const button = document.getElementById("button");
-			button.addEventListener("click", () => {
-				fetch('/random')
-					.then((resp) => resp.text())
-					.then((text) => {
-						const random = document.getElementById('random');
-						random.textContent = text;
-					});
-			});
-		</script>
-	</body>
+  <ul id="code-list">
+  </ul>
+
+  <script>
+    async function fetchCodes() {
+      try {
+        const res = await fetch('/api/codes');
+        if (!res.ok) throw new Error('API fetch failed');
+        const codes = await res.json();
+
+        const ul = document.getElementById('code-list');
+        codes.forEach(code => {
+          const li = document.createElement('li');
+
+          //コード表示
+        const span = document.createElement('span');
+        span.textContent = code;
+        li.appendChild(span);
+
+        // コピー用ボタン
+                const btn = document.createElement('button');
+        btn.textContent = 'コピー';
+        btn.style.marginLeft = '10px';
+        btn.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(code);
+            btn.textContent = 'コピー完了';
+            setTimeout(() => btn.textContent = 'コピー', 1000);
+          } catch (e) {
+            btn.textContent = 'コピー失敗';
+            console.error(e);
+          }
+        });
+
+        li.appendChild(btn);
+        ul.appendChild(li);
+        
+        });
+      } catch (e) {
+        console.error(e);
+        document.getElementById('code-list').textContent = '招待コードの取得に失敗しました';
+      }
+    }
+
+    fetchCodes();
+  </script>
+</body>
 </html>
